@@ -16,6 +16,7 @@ func main() {
 			image, _ := cmd.Flags().GetString("image")
 			clusterName, _ := cmd.Flags().GetString("cluster-name")
 
+			log.Println("Saving image file...")
 			c := exec.Command("sh", "-c", "podman save -o ~/Downloads/image.tar "+image)
 			output, err := c.CombinedOutput()
 			if err != nil {
@@ -26,6 +27,7 @@ func main() {
 				}
 			}
 
+			log.Println("Image file saved. Loading image into the cluster...")
 			c = exec.Command("sh", "-c", "kind load image-archive --name "+clusterName+" ~/Downloads/image.tar")
 			output, err = c.CombinedOutput()
 			if err != nil {
