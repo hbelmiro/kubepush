@@ -16,6 +16,7 @@ func main() {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			image, _ := cmd.Flags().GetString("image")
 			clusterName, _ := cmd.Flags().GetString("cluster-name")
+			removeImage, _ := cmd.Flags().GetBool("remove-image")
 
 			log.Println("Saving image file...")
 
@@ -54,13 +55,31 @@ func main() {
 				}
 			}
 
-			println(fmt.Sprintf("%s pushed to the %s cluster.", image, clusterName))
+			log.Println(fmt.Sprintf("%s pushed to the %s cluster.", image, clusterName))
+
+			if removeImage {
+				log.Println("Removing the image...")
+
+				c = exec.Command("sh", "-c", "podman rmi "+image)
+				output, err = c.CombinedOutput()
+				if err != nil {
+					if output != nil {
+						return errors.New(string(output))
+					} else {
+						return fmt.Errorf("error when removing the image: %d", err)
+					}
+				}
+
+				log.Println("Image removed successfully")
+			}
+
 			return nil
 		},
 	}
 
 	rootCmd.Flags().StringP("image", "i", "", "image to push")
 	rootCmd.Flags().StringP("cluster-name", "c", "", "the name of the cluster")
+	rootCmd.Flags().BoolP("remove-image", "r", false, "remove the image after pushing it to the cluster")
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
